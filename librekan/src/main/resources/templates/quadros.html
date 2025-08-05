@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmls:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> LIBREKAN </title>
+    <styles>
+    </styles>
 </head>
 <body>
-    <h1>Olá, funcionou</h1>
-    <p>LIBREKAN</p>
-
+    <h1>Quadros</h1>
+    <div><h1>Quadro 1</h1></div>
+    <p> Criar quadro: <span th:text="${add}" > quadro </span></p>
 </body>
 </html>
