@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/cartoes")
-public class CartaoController {
+public class CardController {
 
     @GetMapping("/lista/{listaId}")
     public String listarCartoes(@PathVariable Long listaId, Model model) {

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Novo Quadro</title>
+</head>
+<body>
+    <h1>Novo Quadro</h1>
+    <form th:action="@{/quadros}" th:object="${quadro}" method="post">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" th:field="*{nome}" required />
+        <button type="submit">Salvar</button>
+    </form>
+    <a th:href="@{/quadros}">Voltar</a>
+</body>
+</html>

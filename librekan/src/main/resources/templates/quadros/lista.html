@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Quadros</title>
+</head>
+<body>
+    <h1>Quadros</h1>
+    <a th:href="@{/quadros/novo}">Novo Quadro</a>
+    <ul>
+        <li th:each="quadro : ${quadros}" th:text="${quadro.nome}">Quadro</li>
+    </ul>
+</body>
+</html>
