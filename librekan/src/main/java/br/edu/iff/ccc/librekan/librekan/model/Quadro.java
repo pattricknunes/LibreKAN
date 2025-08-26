@@ -1,6 +1,7 @@
 package br.edu.iff.ccc.librekan.librekan.model;
 
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class Quadro {
@@ -10,7 +11,6 @@ public class Quadro {
 
     private String nome;
 
-    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

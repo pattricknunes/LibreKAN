@@ -1,4 +1,4 @@
-package br.edu.iff.ccc.librekan.librekan.controller.view;
+package br.edu.iff.ccc.librekan.librekan.controller.model;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
