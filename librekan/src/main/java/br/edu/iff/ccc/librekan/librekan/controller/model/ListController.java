@@ -1,4 +1,4 @@
-package br.edu.iff.ccc.librekan.librekan.controller.view;
+package br.edu.iff.ccc.librekan.librekan.controller.model;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +29,7 @@ public class ListController {
     }
 
     @PostMapping("/{id}")
-    public String atualizarLista(@PathVariable Long id/) {
+    public String atualizarLista(@PathVariable Long id) {
         return "redirect:/quadros";
     }
 

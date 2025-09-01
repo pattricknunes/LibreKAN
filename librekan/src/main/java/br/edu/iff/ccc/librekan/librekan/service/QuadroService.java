@@ -3,7 +3,7 @@ package br.edu.iff.ccc.librekan.librekan.service;
 import br.edu.iff.ccc.librekan.librekan.model.Quadro;
 import br.edu.iff.ccc.librekan.librekan.repository.QuadroRepository;
 import org.springframework.stereotype.Service;
-
+import java.util.Optional;
 import java.util.List;
 
 @Service
@@ -21,4 +21,12 @@ public class QuadroService {
     public Quadro salvar(Quadro quadro) {
         return quadroRepository.save(quadro);
     }
+
+    public void excluir(Long id) {
+        quadroRepository.deleteById(id);
+    }
+
+    public Optional<Quadro> buscarPorId(Long id) {
+    return quadroRepository.findById(id);
+}
 }
