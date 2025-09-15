@@ -2,6 +2,7 @@ package br.edu.iff.ccc.librekan.librekan.service;
 
 import br.edu.iff.ccc.librekan.librekan.model.Quadro;
 import br.edu.iff.ccc.librekan.librekan.repository.QuadroRepository;
+import br.edu.iff.ccc.librekan.librekan.exception.QuadroNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.List;
@@ -27,6 +28,9 @@ public class QuadroService {
     }
 
     public Optional<Quadro> buscarPorId(Long id) {
-    return quadroRepository.findById(id);
-}
+        return Optional.ofNullable(
+            quadroRepository.findById(id)
+                .orElseThrow(() -> new QuadroNaoEncontradoException("Quadro com id " + id + " não encontrado."))
+        );
+    }
 }
