@@ -22,6 +22,7 @@ Siga os passos abaixo para configurar e executar a aplicação em seu ambiente l
 
 * **JDK 17** ou superior instalado.
 * **Apache Maven** instalado e configurado no PATH do sistema.
+* **SpringBoot** instalado
 * Um cliente Git para clonar o repositório.
 
 ### Passos para Instalação
