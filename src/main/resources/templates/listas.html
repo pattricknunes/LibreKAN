@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title th:text="${quadro.nome}">Listas do Quadro</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&family=Manrope:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900&display=swap" />
+</head>
+
+<body class="flex flex-col h-screen bg-slate-100" style='font-family: Manrope, "Noto Sans", sans-serif;'>
+
+    <div th:replace="fragments :: header"></div>
+
+    <main class="flex flex-col flex-1 p-8 overflow-hidden">
+
+        <h1 id="quadro-titulo" th:text="${quadro.nome}" th:data-quadro-id="${quadro.id}"
+            class="text-3xl font-bold mb-6 flex-shrink-0 cursor-pointer">Nome do Quadro</h1>
+
+        <div id="listas-container" class="flex flex-1 items-start gap-6 mt-2 overflow-x-auto">
+
+            <div th:each="lista : ${listas}" th:id="'lista-' + ${lista.id}"
+                class="bg-gray-200 p-3 rounded-lg w-72 flex flex-col flex-shrink-0 h-full">
+
+                <div class="flex justify-between items-center mb-3 flex-shrink-0">
+                    <h2 th:text="${lista.nome}" th:data-lista-id="${lista.id}"
+                        class="font-bold cursor-pointer lista-titulo"></h2>
+                    <button th:data-lista-id="${lista.id}"
+                        class="btn-deletar-lista text-lg font-bold text-gray-500 hover:text-red-600">&times;</button>
+                </div>
+
+                <div class="cartoes-container flex-grow space-y-3 overflow-y-auto pr-2" th:data-lista-id="${lista.id}">
+                    <div th:each="cartao : ${lista.cartoes}" th:data-cartao-id="${cartao.id}"
+                        class="card-editavel bg-white p-2 rounded shadow cursor-move flex justify-between items-start">
+                        <div>
+                            <p class="font-bold" th:text="${cartao.titulo}"></p>
+                            <p class="text-sm text-gray-600" th:if="${cartao.descricao}" th:text="${cartao.descricao}">
+                            </p>
+                        </div>
+                        <button th:data-cartao-id="${cartao.id}"
+                            class="btn-deletar-cartao text-gray-400 hover:text-red-600 font-bold flex-shrink-0">&times;</button>
+                    </div>
+                </div>
+
+                <div class="mt-3 flex-shrink-0">
+                    <button
+                        class="btn-mostrar-form-cartao w-full text-left p-2 text-gray-500 hover:bg-gray-300 rounded">+
+                        Adicionar um cartão...</button>
+                    <form class="form-novo-cartao space-y-2 hidden">
+                        <input type="text" name="titulo" class="w-full p-2 rounded border text-sm"
+                            placeholder="Título do cartão..." required />
+                        <textarea name="descricao" class="w-full p-2 rounded border text-sm"
+                            placeholder="Descrição (opcional)..."></textarea>
+                        <input type="hidden" name="listaId" th:value="${lista.id}" />
+                        <div class="flex items-center gap-2">
+                            <button type="submit"
+                                class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">Adicionar</button>
+                            <button type="button"
+                                class="btn-cancelar-cartao text-2xl text-gray-500 hover:text-black">&times;</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="w-72 flex-shrink-0">
+                <form id="form-nova-lista" class="bg-gray-200 p-3 rounded-lg h-full flex flex-col">
+                    <div class="flex-grow">
+                        <input type="text" id="nome-lista-input" name="nome" placeholder="Adicionar outra lista..."
+                            class="w-full p-2 rounded border" required />
+                    </div>
+                    <input type="hidden" name="quadroId" th:value="${quadro.id}" />
+                    <button type="submit" class="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Criar
+                        Lista</button>
+                </form>
+            </div>
+        </div>
+        <div id="modal-editar-cartao"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                <h2 class="text-2xl font-bold mb-4">Editar Cartão</h2>
+                <form id="form-editar-cartao">
+                    <input type="hidden" id="edit-cartao-id" name="id">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="edit-cartao-titulo" class="block font-medium">Título</label>
+                            <input type="text" id="edit-cartao-titulo" name="titulo" class="w-full p-2 border rounded"
+                                required>
+                        </div>
+                        <div>
+                            <label for="edit-cartao-descricao" class="block font-medium">Descrição</label>
+                            <textarea id="edit-cartao-descricao" name="descricao" rows="4"
+                                class="w-full p-2 border rounded"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-4">
+                        <button type="button" id="btn-cancelar-edicao"
+                            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Salvar
+                            Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="fragments :: footer"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.getElementById('listas-container');
+            const formNovaLista = document.getElementById('form-nova-lista');
+            const tituloQuadroH1 = document.getElementById('quadro-titulo');
+            const modal = document.getElementById('modal-editar-cartao');
+            const formEditarCartao = document.getElementById('form-editar-cartao');
+            const btnCancelarEdicao = document.getElementById('btn-cancelar-edicao')
+
+            function ativarDragAndDrop() {
+                const containersDeCartoes = document.querySelectorAll('.cartoes-container');
+                containersDeCartoes.forEach(c => {
+                    if (c.sortableInstance) return;
+                    c.sortableInstance = new Sortable(c, {
+                        group: 'cartoes', animation: 150,
+                        onEnd: function (evt) {
+                            const cartaoId = evt.item.dataset.cartaoId;
+                            const novaListaId = evt.to.dataset.listaId;
+                            const dados = new URLSearchParams();
+                            dados.append('novaListaId', novaListaId);
+                            fetch(`/api/v1/cartoes/${cartaoId}/mover`, { method: 'PATCH', body: dados })
+                                .catch(error => console.error('Erro ao mover cartão:', error));
+                        }
+                    });
+                });
+            }
+
+            if (formNovaLista) {
+                formNovaLista.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    const formData = new FormData(formNovaLista);
+                    if (!formData.get('nome').trim()) { return alert('O nome da lista não pode ser vazio.'); }
+                    fetch('/api/v1/listas', { method: 'POST', body: formData })
+                        .then(response => { if (!response.ok) throw new Error('Erro ao criar lista.'); return response.json(); })
+                        .then(listaSalva => {
+                            const novaListaDiv = document.createElement('div');
+                            novaListaDiv.id = `lista-${listaSalva.id}`;
+                            novaListaDiv.className = 'bg-gray-200 p-3 rounded-lg w-72 flex flex-col flex-shrink-0 h-full';
+                            novaListaDiv.innerHTML = `
+                            <div class="flex justify-between items-center mb-3 flex-shrink-0">
+                                <h2 data-lista-id="${listaSalva.id}" class="font-bold cursor-pointer lista-titulo">${listaSalva.nome}</h2>
+                                <button data-lista-id="${listaSalva.id}" class="btn-deletar-lista text-lg font-bold text-gray-500 hover:text-red-600">&times;</button>
+                            </div>
+                            <div class="cartoes-container flex-grow space-y-3 overflow-y-auto pr-2" data-lista-id="${listaSalva.id}"></div>
+                            <div class="mt-3 flex-shrink-0">
+                                <button class="btn-mostrar-form-cartao w-full text-left p-2 text-gray-500 hover:bg-gray-300 rounded">+ Adicionar um cartão...</button>
+                                <form class="form-novo-cartao space-y-2 hidden">
+                                    <input type="text" name="titulo" class="w-full p-2 rounded border text-sm" placeholder="Título do cartão..." required />
+                                    <textarea name="descricao" class="w-full p-2 rounded border text-sm" placeholder="Descrição (opcional)..."></textarea>
+                                    <input type="hidden" name="listaId" value="${listaSalva.id}" />
+                                    <div class="flex items-center gap-2">
+                                        <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">Adicionar</button>
+                                        <button type="button" class="btn-cancelar-cartao text-2xl text-gray-500 hover:text-black">&times;</button>
+                                    </div>
+                                </form>
+                            </div>`;
+                            container.insertBefore(novaListaDiv, formNovaLista.parentElement);
+                            formNovaLista.reset();
+                            ativarDragAndDrop();
+                        })
+                        .catch(error => console.error('Erro ao salvar a lista:', error));
+                });
+            }
+
+            if (container) {
+                container.addEventListener('submit', function (event) {
+                    if (event.target.classList.contains('form-novo-cartao')) {
+                        event.preventDefault();
+                        const formCartao = event.target;
+                        const formData = new FormData(formCartao);
+                        const cartoesContainer = formCartao.closest('.flex-col').querySelector('.cartoes-container');
+                        const btnMostrarForm = formCartao.previousElementSibling;
+                        fetch('/api/v1/cartoes', { method: 'POST', body: formData })
+                            .then(response => { if (!response.ok) throw new Error('Erro ao criar o cartão.'); return response.json(); })
+                            .then(cartaoSalvo => {
+                                const novoCartaoDiv = document.createElement('div');
+                                novoCartaoDiv.dataset.cartaoId = cartaoSalvo.id;
+                                novoCartaoDiv.className = 'card-editavel bg-white p-2 rounded shadow cursor-move flex justify-between items-start';
+                                let html = `<div><p class="font-bold">${cartaoSalvo.titulo}</p>`;
+                                if (cartaoSalvo.descricao && cartaoSalvo.descricao.trim() !== '') {
+                                    html += `<p class="text-sm text-gray-600">${cartaoSalvo.descricao}</p>`;
+                                }
+                                html += `</div><button data-cartao-id="${cartaoSalvo.id}" class="btn-deletar-cartao text-gray-400 hover:text-red-600 font-bold flex-shrink-0">&times;</button>`;
+                                novoCartaoDiv.innerHTML = html;
+                                cartoesContainer.appendChild(novoCartaoDiv);
+                                formCartao.reset();
+                                formCartao.classList.add('hidden');
+                                btnMostrarForm.classList.remove('hidden');
+                            })
+                            .catch(error => console.error('Erro:', error));
+                    }
+                });
+
+                container.addEventListener('click', function (event) {
+                    const btnMostrarForm = event.target.closest('.btn-mostrar-form-cartao');
+                    if (btnMostrarForm) {
+                        const form = btnMostrarForm.nextElementSibling;
+                        btnMostrarForm.classList.add('hidden');
+                        form.classList.remove('hidden');
+                        form.querySelector('input[name="titulo"]').focus();
+                        return;
+                    }
+                    const btnCancelarCartao = event.target.closest('.btn-cancelar-cartao');
+                    if (btnCancelarCartao) {
+                        const form = btnCancelarCartao.closest('.form-novo-cartao');
+                        const btnMostrarForm = form.previousElementSibling;
+                        form.classList.add('hidden');
+                        btnMostrarForm.classList.remove('hidden');
+                        form.reset();
+                        return;
+                    }
+                    const botaoDeletarLista = event.target.closest('.btn-deletar-lista');
+                    if (botaoDeletarLista) {
+                        const id = botaoDeletarLista.dataset.listaId;
+                        if (confirm('Tem certeza que deseja excluir esta lista e todos os seus cartões?')) {
+                            fetch(`/api/v1/listas/${id}`, { method: 'DELETE' })
+                                .then(r => { if (r.ok) document.getElementById(`lista-${id}`).remove(); else alert('Falha ao deletar lista.'); });
+                        }
+                        return;
+                    }
+                    const botaoDeletarCartao = event.target.closest('.btn-deletar-cartao');
+                    if (botaoDeletarCartao) {
+                        const cartaoId = botaoDeletarCartao.dataset.cartaoId;
+                        const cartaoDiv = botaoDeletarCartao.closest('div[data-cartao-id]');
+
+                        if (confirm('Tem certeza que deseja excluir este cartão?')) {
+                            fetch(`/api/v1/cartoes/${cartaoId}`, {
+                                method: 'DELETE'
+                            })
+                                .then(response => {
+                                    if (response.ok) {
+                                        cartaoDiv.remove();
+                                    } else {
+                                        alert('Não foi possível excluir o cartão.');
+                                    }
+                                })
+                                .catch(error => console.error('Erro ao deletar cartão:', error));
+                        }
+                    }
+                    const tituloH2 = event.target.closest('.lista-titulo');
+                    if (tituloH2) {
+                        const textoOriginal = tituloH2.textContent.trim();
+                        const listaId = tituloH2.dataset.listaId;
+                        const input = document.createElement('input');
+                        input.type = 'text'; input.value = textoOriginal;
+                        input.className = 'font-bold w-full bg-white p-1 rounded-sm border border-blue-400';
+                        tituloH2.replaceWith(input); input.focus();
+                        const salvarAlteracoes = () => {
+                            const novoNome = input.value.trim();
+                            if (novoNome === '' || novoNome === textoOriginal) { input.replaceWith(tituloH2); return; }
+                            fetch(`/api/v1/listas/${listaId}?nome=${encodeURIComponent(novoNome)}`, { method: 'PUT' })
+                                .then(response => { if (!response.ok) throw new Error('Falha ao atualizar'); return response.json(); })
+                                .then(listaAtualizada => { tituloH2.textContent = listaAtualizada.nome; input.replaceWith(tituloH2); })
+                                .catch(error => { console.error("Erro:", error); input.replaceWith(tituloH2); });
+                        };
+                        input.addEventListener('blur', salvarAlteracoes);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+                    }
+                });
+            }
+            ativarDragAndDrop();
+
+            if (tituloQuadroH1) {
+                tituloQuadroH1.addEventListener('click', function () {
+                    const textoOriginal = tituloQuadroH1.textContent.trim();
+                    const quadroId = tituloQuadroH1.dataset.quadroId;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = textoOriginal;
+                    input.className = 'text-3xl font-bold bg-white p-1 mt-b border border-slate-200 rounded';
+
+                    tituloQuadroH1.replaceWith(input);
+                    input.focus();
+
+                    const salvarAlteracoes = () => {
+                        const novoNome = input.value.trim();
+                        if (novoNome === '' || novoNome === textoOriginal) {
+                            input.replaceWith(tituloQuadroH1);
+                            return;
+                        }
+
+                        fetch(`/api/v1/quadros/${quadroId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nome: novoNome })
+                        })
+                            .then(async response => {
+                                if (!response.ok) {
+                                    const errorMsg = await response.text();
+                                    throw new Error(errorMsg || `Erro ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(quadroAtualizado => {
+                                tituloQuadroH1.textContent = quadroAtualizado.nome;
+                                document.title = quadroAtualizado.nome;
+                                input.replaceWith(tituloQuadroH1);
+                            })
+                            .catch(error => {
+                                console.error("Erro ao atualizar o quadro:", error);
+                                alert(error.message);
+                                input.replaceWith(tituloQuadroH1);
+                            });
+                    };
+
+                    input.addEventListener('blur', salvarAlteracoes);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') input.blur();
+                        if (e.key === 'Escape') input.replaceWith(tituloQuadroH1);
+                    });
+                });
+            }
+
+            container.addEventListener('click', function (event) {
+                const cartaoDiv = event.target.closest('.card-editavel');
+                if (cartaoDiv) {
+                    const cartaoId = cartaoDiv.dataset.cartaoId;
+
+                    fetch(`/api/v1/cartoes/${cartaoId}`)
+                        .then(response => response.json())
+                        .then(cartao => {
+                            formEditarCartao.querySelector('#edit-cartao-id').value = cartao.id;
+                            formEditarCartao.querySelector('#edit-cartao-titulo').value = cartao.titulo;
+                            formEditarCartao.querySelector('#edit-cartao-descricao').value = cartao.descricao || '';
+
+                            modal.classList.remove('hidden');
+                        });
+                }
+            });
+
+            formEditarCartao.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const cartaoId = formEditarCartao.querySelector('#edit-cartao-id').value;
+                const novoTitulo = formEditarCartao.querySelector('#edit-cartao-titulo').value;
+                const novaDescricao = formEditarCartao.querySelector('#edit-cartao-descricao').value;
+
+                fetch(`/api/v1/cartoes/${cartaoId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo: novoTitulo, descricao: novaDescricao })
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Falha ao salvar o cartão.');
+                        return response.json();
+                    })
+                    .then(cartaoAtualizado => {
+                        const cartaoNaTela = document.querySelector(`div[data-cartao-id="${cartaoId}"]`);
+                        if (cartaoNaTela) {
+                            cartaoNaTela.querySelector('.font-bold').textContent = cartaoAtualizado.titulo;
+                            let descElement = cartaoNaTela.querySelector('.text-sm');
+                            if (cartaoAtualizado.descricao) {
+                                if (!descElement) {
+                                    descElement = document.createElement('p');
+                                    descElement.className = 'text-sm text-gray-600';
+                                    cartaoNaTela.querySelector('div').appendChild(descElement);
+                                }
+                                descElement.textContent = cartaoAtualizado.descricao;
+                            } else if (descElement) {
+                                descElement.remove();
+                            }
+                        }
+                        modal.classList.add('hidden');
+                    })
+                    .catch(error => console.error('Erro:', error));
+            });
+
+            btnCancelarEdicao.addEventListener('click', () => modal.classList.add('hidden'));
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

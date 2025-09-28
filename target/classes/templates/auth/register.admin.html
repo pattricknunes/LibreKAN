@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cadastro de Admin</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <div th:replace="fragments :: header"></div>
+    <h1>Cadastro de Administrador</h1>
+    <form th:action="@{/auth/register/admin}" th:object="${adminDTO}" method="post">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" th:field="*{nome}" required />
+        <br/>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" th:field="*{email}" required />
+        <br/>
+
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" th:field="*{senha}" required />
+        <br/>
+
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <p>Já tem uma conta? <a th:href="@{/auth/login}">Login</a></p>
+    <div th:replace="fragments :: footer"></div>
+</body>
+</html>
