@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.4</version>
+		<version>3.3.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.edu.iff.ccc.librekan</groupId>
 	<artifactId>librekan</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.4</version>
 	<name>librekan</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -70,10 +70,10 @@
 
 		<!-- Springdoc OpenAPI para gerar a documentação Swagger -->
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.6.0</version>
-		</dependency>
+    		<groupId>org.springdoc</groupId>
+    		<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    		<version>2.6.0</version>
+		</dependency>	
 		
 	</dependencies>
 

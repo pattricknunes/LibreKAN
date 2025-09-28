@@ -7,6 +7,10 @@ import br.edu.iff.ccc.librekan.librekan.dto.UsuarioDTO;
 import br.edu.iff.ccc.librekan.librekan.model.Quadro;
 import br.edu.iff.ccc.librekan.librekan.repository.QuadroRepository;
 import br.edu.iff.ccc.librekan.librekan.service.QuadroService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession; 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/quadros")
+@Tag(name = "Quadros", description = "Endpoints para gerenciamento de quadros")
 public class QuadroApiController {
 
     private final QuadroService quadroService;
@@ -31,6 +36,8 @@ public class QuadroApiController {
     }
 
     @GetMapping
+    @Operation(summary = "Lista todos os quadros do usuário logado") // <-- DESCRIÇÃO DA OPERAÇÃO
+    @ApiResponse(responseCode = "200", description = "Lista de quadros retornada com sucesso")
     public List<QuadroDTO> listarQuadros(HttpSession session) { 
         Object usuarioLogado = session.getAttribute("usuarioLogado");
 
@@ -50,6 +57,12 @@ public class QuadroApiController {
     }
 
     @PostMapping
+    @Operation(summary = "Cria um novo quadro")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Quadro criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos (ex: nome vazio)"),
+            @ApiResponse(responseCode = "409", description = "Já existe um quadro com este nome")
+    })
     public ResponseEntity<?> criarQuadro(@Valid @RequestBody QuadroUpdateDTO dto, HttpSession session) { 
         String nome = dto.getNome();
 
@@ -75,6 +88,12 @@ public class QuadroApiController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Atualiza o nome de um quadro existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Quadro atualizado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Quadro não encontrado"),
+            @ApiResponse(responseCode = "409", description = "O novo nome já está em uso por outro quadro")
+    })
     public ResponseEntity<QuadroDTO> atualizarQuadro(@PathVariable Long id, @Valid @RequestBody QuadroUpdateDTO dto) {
         Quadro quadroAtualizado = quadroService.atualizarNome(id, dto.getNome());
         QuadroDTO quadroDto = new QuadroDTO(quadroAtualizado.getId(), quadroAtualizado.getNome());
@@ -82,6 +101,11 @@ public class QuadroApiController {
     }
     
     @DeleteMapping("/{id}")
+    @Operation(summary = "Exclui um quadro existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Quadro excluído com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Quadro não encontrado")
+    })
     public ResponseEntity<Void> excluirQuadro(@PathVariable Long id) {
         quadroService.excluir(id);
         return ResponseEntity.noContent().build();

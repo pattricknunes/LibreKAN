@@ -181,21 +181,34 @@
                     if (event.target.classList.contains('form-novo-cartao')) {
                         event.preventDefault();
                         const formCartao = event.target;
-                        const formData = new FormData(formCartao);
                         const cartoesContainer = formCartao.closest('.flex-col').querySelector('.cartoes-container');
                         const btnMostrarForm = formCartao.previousElementSibling;
-                        fetch('/api/v1/cartoes', { method: 'POST', body: formData })
-                            .then(response => { if (!response.ok) throw new Error('Erro ao criar o cartão.'); return response.json(); })
+                        const titulo = formCartao.querySelector('input[name="titulo"]').value;
+                        const descricao = formCartao.querySelector('textarea[name="descricao"]').value;
+                        const listaId = formCartao.querySelector('input[name="listaId"]').value;
+
+                        fetch(`/api/v1/cartoes?listaId=${listaId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ titulo: titulo, descricao: descricao })
+                        })
+                            .then(response => {
+                                if (!response.ok) throw new Error('Erro ao criar o cartão.');
+                                return response.json();
+                            })
                             .then(cartaoSalvo => {
                                 const novoCartaoDiv = document.createElement('div');
                                 novoCartaoDiv.dataset.cartaoId = cartaoSalvo.id;
-                                novoCartaoDiv.className = 'card-editavel bg-white p-2 rounded shadow cursor-move flex justify-between items-start';
+                                novoCartaoDiv.className = 'card-editavel bg-white p-2 rounded shadow cursor-pointer flex justify-between items-start';
                                 let html = `<div><p class="font-bold">${cartaoSalvo.titulo}</p>`;
                                 if (cartaoSalvo.descricao && cartaoSalvo.descricao.trim() !== '') {
                                     html += `<p class="text-sm text-gray-600">${cartaoSalvo.descricao}</p>`;
                                 }
                                 html += `</div><button data-cartao-id="${cartaoSalvo.id}" class="btn-deletar-cartao text-gray-400 hover:text-red-600 font-bold flex-shrink-0">&times;</button>`;
                                 novoCartaoDiv.innerHTML = html;
+
                                 cartoesContainer.appendChild(novoCartaoDiv);
                                 formCartao.reset();
                                 formCartao.classList.add('hidden');
