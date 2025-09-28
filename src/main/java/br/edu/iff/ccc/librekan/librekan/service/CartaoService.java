@@ -1,5 +1,6 @@
 package br.edu.iff.ccc.librekan.librekan.service;
 
+import br.edu.iff.ccc.librekan.librekan.exceptions.RecursoNaoEncontradoException;
 import br.edu.iff.ccc.librekan.librekan.model.Cartao;
 import br.edu.iff.ccc.librekan.librekan.model.Lista;
 import br.edu.iff.ccc.librekan.librekan.repository.CartaoRepository;
@@ -28,10 +29,11 @@ public class CartaoService {
     @Transactional
     public Cartao moverCartao(Long cartaoId, Long novaListaId) {
         Cartao cartao = cartaoRepository.findById(cartaoId)
-                .orElseThrow(() -> new RuntimeException("Cartão não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cartão não encontrado com o ID: " + cartaoId));
 
         Lista novaLista = listaRepository.findById(novaListaId)
-                .orElseThrow(() -> new RuntimeException("Nova lista não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Lista de destino não encontrada com o ID: " + novaListaId));
 
         cartao.setLista(novaLista);
         return cartaoRepository.save(cartao);
@@ -39,18 +41,16 @@ public class CartaoService {
 
     @Transactional
     public Cartao atualizar(Long id, String novoTitulo, String novaDescricao) {
-    Cartao cartao = cartaoRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Cartão não encontrado com o id: " + id));
-    
-    cartao.setTitulo(novoTitulo);
-    cartao.setDescricao(novaDescricao);
-    
-    return cartaoRepository.save(cartao);
-}
+        Cartao cartao = cartaoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cartão não encontrado com o id: " + id));
+        cartao.setTitulo(novoTitulo);
+        cartao.setDescricao(novaDescricao);
+        return cartaoRepository.save(cartao);
+    }
 
     public void excluir(Long id) {
         if (!cartaoRepository.existsById(id)) {
-            throw new RuntimeException("Cartão não encontrado com o id: " + id);
+            throw new RecursoNaoEncontradoException("Cartão não encontrado com o id: " + id);
         }
         cartaoRepository.deleteById(id);
     }

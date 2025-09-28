@@ -1,8 +1,10 @@
 package br.edu.iff.ccc.librekan.librekan.service;
 
+import br.edu.iff.ccc.librekan.librekan.exceptions.RecursoNaoEncontradoException;
 import br.edu.iff.ccc.librekan.librekan.model.Lista;
-import br.edu.iff.ccc.librekan.librekan.repository.ListaRepository; // Importe o novo repository
+import br.edu.iff.ccc.librekan.librekan.repository.ListaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -24,15 +26,18 @@ public class ListaService {
     }
 
     public void excluir(Long id) {
+        if (listaRepository.findById(id).isEmpty()) {
+            throw new RecursoNaoEncontradoException("Lista não encontrada com o ID: " + id);
+        }
         listaRepository.deleteById(id);
-    }   
+    }     
 
+    @Transactional
     public Lista atualizarNome(Long id, String novoNome) {
-    Lista lista = listaRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Lista não encontrada com o id: " + id));
-
-    lista.setNome(novoNome);
-    return listaRepository.save(lista);
+        Lista lista = listaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Lista não encontrada com o id: " + id));
+        lista.setNome(novoNome);
+        return listaRepository.save(lista);
     }
 
 }

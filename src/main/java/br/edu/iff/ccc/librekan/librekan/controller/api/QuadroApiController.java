@@ -75,23 +75,14 @@ public class QuadroApiController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarQuadro(@PathVariable Long id, @Valid @RequestBody QuadroUpdateDTO dto) {
-        try {
-            Quadro quadroAtualizado = quadroService.atualizarNome(id, dto.getNome());
-            QuadroDTO quadroDto = new QuadroDTO(quadroAtualizado.getId(), quadroAtualizado.getNome());
-            return ResponseEntity.ok(quadroDto);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<QuadroDTO> atualizarQuadro(@PathVariable Long id, @Valid @RequestBody QuadroUpdateDTO dto) {
+        Quadro quadroAtualizado = quadroService.atualizarNome(id, dto.getNome());
+        QuadroDTO quadroDto = new QuadroDTO(quadroAtualizado.getId(), quadroAtualizado.getNome());
+        return ResponseEntity.ok(quadroDto);
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirQuadro(@PathVariable Long id) {
-        if (quadroService.buscarPorId(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
         quadroService.excluir(id);
         return ResponseEntity.noContent().build();
     }

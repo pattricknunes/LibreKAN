@@ -44,23 +44,17 @@ public class ListaApiController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarNomeLista(@PathVariable Long id, @Valid @RequestBody ListaUpdateDTO dto) { 
-        try {
-            Lista listaAtualizada = listaService.atualizarNome(id, dto.getNome());
-            ListaDTO responseDto = new ListaDTO(listaAtualizada.getId(), listaAtualizada.getNome());
-            return ResponseEntity.ok(responseDto);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ListaDTO> atualizarNomeLista(@PathVariable Long id, @Valid @RequestBody ListaUpdateDTO dto) {
+        Lista listaAtualizada = listaService.atualizarNome(id, dto.getNome());
+        ListaDTO responseDto = new ListaDTO(listaAtualizada.getId(), listaAtualizada.getNome());
+        return ResponseEntity.ok(responseDto);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarLista(@PathVariable Long id) {
-        try {
-            listaService.excluir(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        listaService.excluir(id);
+        return ResponseEntity.noContent().build();
     }
+
+
 }

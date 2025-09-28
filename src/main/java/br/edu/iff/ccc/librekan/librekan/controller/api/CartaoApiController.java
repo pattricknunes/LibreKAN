@@ -2,6 +2,7 @@ package br.edu.iff.ccc.librekan.librekan.controller.api;
 
 import br.edu.iff.ccc.librekan.librekan.dto.CartaoDTO;
 import br.edu.iff.ccc.librekan.librekan.dto.CartaoUpdateDTO;
+import br.edu.iff.ccc.librekan.librekan.exceptions.RegraDeNegocioException;
 import br.edu.iff.ccc.librekan.librekan.model.Cartao;
 import br.edu.iff.ccc.librekan.librekan.model.Lista;
 import br.edu.iff.ccc.librekan.librekan.service.CartaoService;
@@ -47,39 +48,27 @@ public class CartaoApiController {
     }
 
     @PatchMapping("/{cartaoId}/mover")
-    public ResponseEntity<?> moverCartao(@PathVariable Long cartaoId, @RequestParam("novaListaId") Long novaListaId) {
-        try {
-            Cartao cartaoMovido = cartaoService.moverCartao(cartaoId, novaListaId);
-            CartaoDTO dto = new CartaoDTO(cartaoMovido.getId(), cartaoMovido.getTitulo(), cartaoMovido.getDescricao());
-            return ResponseEntity.ok(dto);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CartaoDTO> moverCartao(@PathVariable Long cartaoId, @RequestParam("novaListaId") Long novaListaId) {
+        Cartao cartaoMovido = cartaoService.moverCartao(cartaoId, novaListaId);
+        CartaoDTO dto = new CartaoDTO(cartaoMovido.getId(), cartaoMovido.getTitulo(), cartaoMovido.getDescricao());
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarCartao(@PathVariable Long id) {
-        try {
-            cartaoService.excluir(id);
-            return ResponseEntity.noContent().build(); 
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        cartaoService.excluir(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarCartao(@PathVariable Long id, @Valid @RequestBody CartaoUpdateDTO dto, BindingResult result) {
-    if (result.hasErrors()) {
-        return ResponseEntity.badRequest().body("O título do cartão é obrigatório.");
-    }
-    try {
+    public ResponseEntity<CartaoDTO> atualizarCartao(@PathVariable Long id, @Valid @RequestBody CartaoUpdateDTO dto, BindingResult result) {
+        if (result.hasErrors()) {
+            throw new RegraDeNegocioException("O título do cartão é obrigatório.");
+        }
         Cartao cartaoAtualizado = cartaoService.atualizar(id, dto.getTitulo(), dto.getDescricao());
         CartaoDTO responseDto = new CartaoDTO(cartaoAtualizado.getId(), cartaoAtualizado.getTitulo(), cartaoAtualizado.getDescricao());
         return ResponseEntity.ok(responseDto);
-    } catch (RuntimeException e) {
-        return ResponseEntity.notFound().build();
     }
-}
 
     @GetMapping("/{id}")
     public ResponseEntity<CartaoDTO> buscarCartaoPorId(@PathVariable Long id) {
