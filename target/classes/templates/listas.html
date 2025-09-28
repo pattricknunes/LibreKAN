@@ -136,32 +136,38 @@
             if (formNovaLista) {
                 formNovaLista.addEventListener('submit', function (event) {
                     event.preventDefault();
-                    const formData = new FormData(formNovaLista);
-                    if (!formData.get('nome').trim()) { return alert('O nome da lista não pode ser vazio.'); }
-                    fetch('/api/v1/listas', { method: 'POST', body: formData })
+                    const nomeLista = formNovaLista.querySelector('input[name="nome"]').value;
+                    const quadroId = formNovaLista.querySelector('input[name="quadroId"]').value;
+                    if (!nomeLista.trim()) { return alert('O nome da lista não pode ser vazio.'); }
+
+                    fetch(`/api/v1/listas?quadroId=${quadroId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nome: nomeLista })
+                    })
                         .then(response => { if (!response.ok) throw new Error('Erro ao criar lista.'); return response.json(); })
                         .then(listaSalva => {
                             const novaListaDiv = document.createElement('div');
                             novaListaDiv.id = `lista-${listaSalva.id}`;
                             novaListaDiv.className = 'bg-gray-200 p-3 rounded-lg w-72 flex flex-col flex-shrink-0 h-full';
                             novaListaDiv.innerHTML = `
-                            <div class="flex justify-between items-center mb-3 flex-shrink-0">
-                                <h2 data-lista-id="${listaSalva.id}" class="font-bold cursor-pointer lista-titulo">${listaSalva.nome}</h2>
-                                <button data-lista-id="${listaSalva.id}" class="btn-deletar-lista text-lg font-bold text-gray-500 hover:text-red-600">&times;</button>
+                    <div class="flex justify-between items-center mb-3 flex-shrink-0">
+                        <h2 data-lista-id="${listaSalva.id}" class="font-bold cursor-pointer lista-titulo">${listaSalva.nome}</h2>
+                        <button data-lista-id="${listaSalva.id}" class="btn-deletar-lista text-lg font-bold text-gray-500 hover:text-red-600">&times;</button>
+                    </div>
+                    <div class="cartoes-container flex-grow space-y-3 overflow-y-auto pr-2" data-lista-id="${listaSalva.id}"></div>
+                    <div class="mt-3 flex-shrink-0">
+                        <button class="btn-mostrar-form-cartao w-full text-left p-2 text-gray-500 hover:bg-gray-300 rounded">+ Adicionar um cartão...</button>
+                        <form class="form-novo-cartao space-y-2 hidden">
+                            <input type="text" name="titulo" class="w-full p-2 rounded border text-sm" placeholder="Título do cartão..." required />
+                            <textarea name="descricao" class="w-full p-2 rounded border text-sm" placeholder="Descrição (opcional)..."></textarea>
+                            <input type="hidden" name="listaId" value="${listaSalva.id}" />
+                            <div class="flex items-center gap-2">
+                                <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">Adicionar</button>
+                                <button type="button" class="btn-cancelar-cartao text-2xl text-gray-500 hover:text-black">&times;</button>
                             </div>
-                            <div class="cartoes-container flex-grow space-y-3 overflow-y-auto pr-2" data-lista-id="${listaSalva.id}"></div>
-                            <div class="mt-3 flex-shrink-0">
-                                <button class="btn-mostrar-form-cartao w-full text-left p-2 text-gray-500 hover:bg-gray-300 rounded">+ Adicionar um cartão...</button>
-                                <form class="form-novo-cartao space-y-2 hidden">
-                                    <input type="text" name="titulo" class="w-full p-2 rounded border text-sm" placeholder="Título do cartão..." required />
-                                    <textarea name="descricao" class="w-full p-2 rounded border text-sm" placeholder="Descrição (opcional)..."></textarea>
-                                    <input type="hidden" name="listaId" value="${listaSalva.id}" />
-                                    <div class="flex items-center gap-2">
-                                        <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">Adicionar</button>
-                                        <button type="button" class="btn-cancelar-cartao text-2xl text-gray-500 hover:text-black">&times;</button>
-                                    </div>
-                                </form>
-                            </div>`;
+                        </form>
+                    </div>`;
                             container.insertBefore(novaListaDiv, formNovaLista.parentElement);
                             formNovaLista.reset();
                             ativarDragAndDrop();
@@ -256,7 +262,11 @@
                         const salvarAlteracoes = () => {
                             const novoNome = input.value.trim();
                             if (novoNome === '' || novoNome === textoOriginal) { input.replaceWith(tituloH2); return; }
-                            fetch(`/api/v1/listas/${listaId}?nome=${encodeURIComponent(novoNome)}`, { method: 'PUT' })
+                            fetch(`/api/v1/listas/${listaId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ nome: novoNome })
+                            })
                                 .then(response => { if (!response.ok) throw new Error('Falha ao atualizar'); return response.json(); })
                                 .then(listaAtualizada => { tituloH2.textContent = listaAtualizada.nome; input.replaceWith(tituloH2); })
                                 .catch(error => { console.error("Erro:", error); input.replaceWith(tituloH2); });
