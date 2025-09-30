@@ -39,7 +39,7 @@ Siga os passos abaixo para configurar e executar a aplicação em seu ambiente l
     
 3.  **Mude para o branch de desenvolvimento (se necessário):**
     ```
-    git checkout NOME BRANCH
+    git checkout Teste
     ```
 
 4.  **Execute a aplicação usando o Maven:**

@@ -1,9 +1,7 @@
 package br.edu.iff.ccc.librekan.librekan.controller.api;
 
-import br.edu.iff.ccc.librekan.librekan.dto.AdminDTO;
 import br.edu.iff.ccc.librekan.librekan.dto.QuadroDTO;
 import br.edu.iff.ccc.librekan.librekan.dto.QuadroUpdateDTO;
-import br.edu.iff.ccc.librekan.librekan.dto.UsuarioDTO;
 import br.edu.iff.ccc.librekan.librekan.model.Quadro;
 import br.edu.iff.ccc.librekan.librekan.repository.QuadroRepository;
 import br.edu.iff.ccc.librekan.librekan.service.QuadroService;
@@ -11,14 +9,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession; 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +22,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/quadros")
 @Tag(name = "Quadros", description = "Endpoints para gerenciamento de quadros")
 public class QuadroApiController {
+
+    // ⭐️ Email fixo para simular o usuário logado
+    private static final String FIXED_EMAIL = "teste@librekan.com"; 
 
     private final QuadroService quadroService;
     private final QuadroRepository quadroRepository;
@@ -35,43 +34,33 @@ public class QuadroApiController {
         this.quadroRepository = quadroRepository;
     }
 
+    // ---
+
     @GetMapping
-    @Operation(summary = "Lista todos os quadros do usuário logado") // <-- DESCRIÇÃO DA OPERAÇÃO
+    @Operation(summary = "Lista todos os quadros do usuário 'teste@librekan.com'")
     @ApiResponse(responseCode = "200", description = "Lista de quadros retornada com sucesso")
-    public List<QuadroDTO> listarQuadros(HttpSession session) { 
-        Object usuarioLogado = session.getAttribute("usuarioLogado");
-
-        if (usuarioLogado == null) {
-            return Collections.emptyList();
-        }
-
-        String email = "";
-        if (usuarioLogado instanceof UsuarioDTO u) {
-            email = u.getEmail();
-        } else if (usuarioLogado instanceof AdminDTO a) {
-            email = a.getEmail();
-        }
+    // O parâmetro HttpSession foi removido
+    public List<QuadroDTO> listarQuadros() { 
+        String email = FIXED_EMAIL;
+        
         return quadroService.listarPorDonoEmail(email).stream()
                 .map(quadro -> new QuadroDTO(quadro.getId(), quadro.getNome()))
                 .collect(Collectors.toList());
     }
 
+    // ---
+
     @PostMapping
-    @Operation(summary = "Cria um novo quadro")
+    @Operation(summary = "Cria um novo quadro (associado ao usuário 'teste@librekan.com')")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Quadro criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos (ex: nome vazio)"),
             @ApiResponse(responseCode = "409", description = "Já existe um quadro com este nome")
     })
-    public ResponseEntity<?> criarQuadro(@Valid @RequestBody QuadroUpdateDTO dto, HttpSession session) { 
+    public ResponseEntity<?> criarQuadro(@Valid @RequestBody QuadroUpdateDTO dto) { 
         String nome = dto.getNome();
-
-        Object usuarioLogado = session.getAttribute("usuarioLogado");
-        if (usuarioLogado == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não está logado.");
-        }
         
-        String email = (usuarioLogado instanceof UsuarioDTO u) ? u.getEmail() : ((AdminDTO) usuarioLogado).getEmail();
+        String email = FIXED_EMAIL;
         
         if (quadroRepository.findByNomeIgnoreCase(nome).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("O nome do quadro '" + nome + "' já está em uso.");
@@ -87,6 +76,8 @@ public class QuadroApiController {
         return ResponseEntity.created(URI.create("/api/v1/quadros/" + quadroDto.getId())).body(quadroDto);
     }
 
+    // ---
+
     @PutMapping("/{id}")
     @Operation(summary = "Atualiza o nome de um quadro existente")
     @ApiResponses(value = {
@@ -100,6 +91,8 @@ public class QuadroApiController {
         return ResponseEntity.ok(quadroDto);
     }
     
+    // ---
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Exclui um quadro existente")
     @ApiResponses(value = {
