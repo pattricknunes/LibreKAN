@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+
+<body class="flex flex-col min-h-screen bg-slate-100">
+
+    <div th:replace="fragments :: header"></div>
+
+    <main class="flex-grow flex items-center justify-center">
+    
+        <div class="max-w-md w-full p-6 bg-white shadow-md rounded">
+            <h1 class="text-2xl font-bold mb-4">Login</h1>
+
+            <div th:if="${registrationSuccess}" class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
+                <span class="font-medium" th:text="${registrationSuccess}"></span>
+            </div>
+
+            <form method="post" th:action="@{/auth/login}" th:object="${loginForm}">
+                <div class="mb-4">
+                    <label>Email:</label>
+                    <input type="email" th:field="*{email}" class="form-input mt-1 block w-full border border-solid border-slate-300" required />
+                    <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-red-500 text-sm"></div>
+                </div>
+                <div class="mb-4">
+                    <label>Senha:</label>
+                    <input type="password" th:field="*{senha}" class="form-input mt-1 block w-full border border-solid border-slate-300" required />
+                    <div th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}" class="text-red-500 text-sm"></div>
+                </div>
+                <div th:if="${erro}" class="text-red-500 text-sm mb-4" th:text="${erro}"></div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">
+                    Entrar
+                </button>
+            </form>
+
+            <p class="mt-4 text-sm text-center">
+                Não tem conta?
+                <a th:href="@{/auth/register/user}" class="text-blue-600 hover:underline">Registrar</a>
+            </p>
+        </div>
+
+    </main>
+
+    <div th:replace="fragments :: footer"></div>
+
+</body>
+</html>

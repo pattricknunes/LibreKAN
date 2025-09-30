@@ -1,0 +1,157 @@
+<html>
+
+<head>
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+  <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&amp;family=Manrope%3Awght%40400%3B500%3B700%3B800&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" />
+  <title>LibreKan</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quadrosContainer = document.getElementById('quadrosContainer');
+    const btnCriarQuadro = document.getElementById('btn-criar-quadro');
+
+    function renderizarQuadro(quadro) {
+        const novoQuadroHtml = `
+            <div class="flex flex-col gap-3 pb-3 hover:scale-[102%]" id="quadro-${quadro.id}">
+                <div class="quadro flex flex-col w-full h-32 bg-slate-200 border-2 border-solid border-slate-300 hover:border-blue-600 shadow-md rounded-md cursor-pointer"
+                     data-quadro-id="${quadro.id}">
+                    <div class="flex justify-between items-center rounded-t-md shadow-md bg-blue-600 w-full h-8 relative px-2">
+                        <p class="text-slate-200 quadro-titulo cursor-text flex-grow text-center" data-quadro-id="${quadro.id}">${quadro.nome}</p>
+                        <button data-quadro-id="${quadro.id}" class="btn-deletar-quadro text-white font-bold hover:text-red-400 absolute right-2 top-0 h-full z-10">&times;</button>
+                    </div>
+                </div>
+            </div>`;
+        quadrosContainer.insertAdjacentHTML('beforeend', novoQuadroHtml);
+    }
+
+    if (btnCriarQuadro) {
+        btnCriarQuadro.addEventListener('click', function() {
+            const nome = prompt("Digite o nome do novo quadro:");
+            if (nome && nome.trim() !== '') {
+                fetch('/api/v1/quadros', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: nome })
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorMsg = await response.text();
+                        throw new Error(errorMsg || `Erro ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(quadroSalvo => {
+                    renderizarQuadro(quadroSalvo);
+                })
+                .catch(error => alert(error.message));
+            }
+        });
+    }
+
+    if (quadrosContainer) {
+        quadrosContainer.addEventListener('click', function(event) {
+            const btnDeletar = event.target.closest('.btn-deletar-quadro');
+            const tituloP = event.target.closest('.quadro-titulo');
+            const quadroCard = event.target.closest('.quadro');
+
+            if (btnDeletar) {
+                event.stopPropagation();
+                const quadroId = btnDeletar.dataset.quadroId;
+                if (confirm('Tem certeza que deseja excluir este quadro?')) {
+                    fetch(`/api/v1/quadros/${quadroId}`, { method: 'DELETE' })
+                    .then(response => { if (response.ok) document.getElementById(`quadro-${quadroId}`).remove(); else alert('Falha ao deletar.'); });
+                }
+            } 
+            else if (tituloP) {
+                event.stopPropagation();
+                const textoOriginal = tituloP.textContent.trim();
+                const quadroId = tituloP.dataset.quadroId;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = textoOriginal;
+                input.className = 'bg-slate-200 text-slate-800 font-bold rounded-md w-[97%] h-[90%] text-center focus:outline-none';
+                tituloP.replaceWith(input);
+                input.focus();
+
+                const salvarAlteracoes = () => {
+                    const novoNome = input.value.trim();
+                    if (novoNome === '' || novoNome === textoOriginal) {
+                        input.replaceWith(tituloP);
+                        return;
+                    }
+                    fetch(`/api/v1/quadros/${quadroId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nome: novoNome })
+                    })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const errorMsg = await response.text();
+                            throw new Error(errorMsg || `Erro ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(quadroAtualizado => {
+                        tituloP.textContent = quadroAtualizado.nome;
+                        input.replaceWith(tituloP);
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                        input.replaceWith(tituloP);
+                    });
+                };
+                input.addEventListener('blur', salvarAlteracoes);
+                input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
+            } 
+            else if (quadroCard) {
+                const quadroId = quadroCard.dataset.quadroId;
+                if (quadroId) window.location.href = '/quadros/' + quadroId;
+            }
+        });
+    }
+});
+</script>
+</head>
+
+<body>
+  <div class="relative flex size-full min-h-screen flex-col bg-slate-100 group/design-root overflow-x-hidden"
+    style='font-family: Manrope, "Noto Sans", sans-serif;'>
+    <div class="layout-container flex h-full grow flex-col">
+      <div th:replace="fragments :: header"></div>
+      <div class="max-w-8xl flex flex-1 justify-center py-5">
+        <div class="layout-content-container flex flex-col max-w-8xl flex-1">
+          <div class="flex flex-wrap justify-between gap-3 p-4">
+            <p class="text-[#0e1b10] tracking-light text-[32px] font-bold leading-tight min-w-72">Meus Quadros</p>
+            <button id="btn-criar-quadro"
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 bg-blue-500 hover:bg-blue-600 shadow-sm text-[#0e1b10] text-sm shadow-md font-medium leading-normal">
+              <span class="truncate text-slate-100">Criar Novo Quadro</span>
+            </button>
+          </div>
+          <div id="quadrosContainer" class="grid grid-cols-3 gap-3 p-4">
+            <div th:each="quadro : ${quadros}" th:id="'quadro-' + ${quadro.id}">
+              <div class="flex flex-col gap-3 pb-3 hover:scale-[102%]">
+                <div
+                  class="quadro flex flex-row justify-center w-full h-[128px] bg-center bg-slate-200 border-2 border-solid border-slate-300 hover:border-blue-600 shadow-md rounded-md cursor-pointer"
+                  th:attr="data-quadro-id=${quadro.id}">
+                  <div
+                    class="flex justify-between items-center rounded-t-md shadow-md bg-blue-600 w-full h-[24px] relative px-2">
+                    <p th:text="${quadro.nome}" th:data-quadro-id="${quadro.id}"
+                      class="text-slate-200 quadro-titulo cursor-text flex-grow text-center"></p>
+
+                    <button th:data-quadro-id="${quadro.id}"
+                      class="btn-deletar-quadro text-white font-bold hover:text-red-400 absolute right-2 top-0 h-[24px] z-10">&times;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div th:replace="fragments :: footer"></div>
+  </div>
+</body>
+
+</html>
