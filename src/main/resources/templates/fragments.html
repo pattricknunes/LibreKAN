@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+  <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&family=Manrope:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900&display=swap" />
+
+  <title>LibreKan</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+
+<body>
+  <div th:fragment="header">
+    <header
+      class="flex items-center justify-between whitespace-nowrap border-b border-solid border-blue-400 bg-blue-700 shadow-lg px-10 py-3">
+      <div class="flex items-center gap-4">
+        <h2 class="text-slate-200 text-xl font-bold">LibreKan</h2>
+      </div>
+
+      <div th:if="${session.usuarioLogado != null}" class="flex items-center justify-center gap-6 text-slate-100">
+        <a th:href="@{/quadros}" ...>Meus Quadros</a>
+        <div class="... rounded-full size-10" ...></div>
+        <form th:action="@{/auth/logout}" method="post" class="mb-0">
+          <button type="submit" ...>Sair</button>
+        </form>
+      </div>
+    </header>
+  </div>
+
+  <div th:fragment="footer">
+    <footer class="text-center py-4 bg-slate-200">
+      &copy; 2025 LibreKan
+    </footer>
+  </div>
+</body>
+
+</html>
